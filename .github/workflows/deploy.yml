@@ -17,11 +17,16 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install
 
       - name: Run tests
-        run: npm test
+        run: pnpm test
 
   deploy:
     needs: test               # only runs if 'test' job succeeds
@@ -30,8 +35,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
       - name: Install Railway CLI
-        run: npm install -g @railway/cli
+        run: pnpm add -g @railway/cli
 
       - name: Deploy to Railway
         run: railway up --service=YOUR_SERVICE_ID

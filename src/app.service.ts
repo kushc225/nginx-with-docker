@@ -5,4 +5,8 @@ export class AppService {
   getStatus() {
     return { status: 'ok' };
   }
+
+  getHello() {
+    return 'Hello World!';
+  }
 }
