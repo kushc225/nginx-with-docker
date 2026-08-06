@@ -2,6 +2,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './logging/http-exception.filter';
+import { ResponseLoggingInterceptor } from './logging/response-logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,6 +16,9 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
+
+  app.useGlobalInterceptors(app.get(ResponseLoggingInterceptor));
+  app.useGlobalFilters(app.get(HttpExceptionFilter));
 
   const config = new DocumentBuilder()
     .setTitle('User Profile Cache API')

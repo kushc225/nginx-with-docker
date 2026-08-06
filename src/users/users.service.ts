@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
@@ -8,6 +8,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 @Injectable()
 export class UsersService {
   private readonly cachePrefix = 'user:';
+  private readonly logger = new Logger(UsersService.name);
 
   constructor(
     private readonly prisma: PrismaService,
@@ -31,9 +32,22 @@ export class UsersService {
         data: createUserDto,
       });
 
-      await this.cacheUser(user);
+      try {
+        await this.cacheUser(user);
+      } catch (cacheError) {
+        this.logger.error('Failed to cache user after create', {
+          error: cacheError,
+          userId: (user as { id?: string }).id,
+        });
+      }
+
       return user;
     } catch (error: unknown) {
+      this.logger.error('Unable to create user', {
+        error,
+        payload: createUserDto,
+      });
+
       if (
         error instanceof PrismaClientKnownRequestError &&
         error.code === 'P2002' &&
